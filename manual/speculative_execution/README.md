@@ -7,7 +7,10 @@ will experience bad latency.
 One thing we can do to improve that is pre-emptively start a second
 execution of the query against another node, before the first node has
 replied or errored out. If that second node replies faster, we can send
-the response back to the client (we also cancel the first query):
+the response back to the client (we also cancel the first execution --
+note that "cancelling" in this context simply means discarding the response
+when it arrives later, Cassandra does not support cancellation of in flight
+requests at this stage):
 
 ```ditaa
 client           driver          exec1  exec2
@@ -121,10 +124,10 @@ explicitly depend on it:
 Then create a [PercentileTracker] that will collect latency histograms for your `Cluster`. Two
 implementations are provided out of the box:
 
-* [PerHostPercentileTracker]: maintains a histogram per host. This means queries to a host will
-  only be compared against previous queries to the same host.
 * [ClusterWidePercentileTracker]: maintains a single histogram for the whole cluster. This means
   queries will be compared against the global performance of all the hosts in the cluster.
+* [PerHostPercentileTracker]: maintains a histogram per host. This means queries to a host will
+  only be compared against previous queries to the same host.
   
 We recommend the cluster-wide strategy: in practice, we've found that it produces better results,
 because it does a better job at penalizing hosts that are consistently slower.
