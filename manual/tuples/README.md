@@ -14,7 +14,9 @@ CREATE TABLE ks.collect_things (
 
 ### Fetching Tuples from Rows results
 
-The DataStax Java driver exposes a special `TupleValue` class to handle such columns. `TupleValue` extends `GettableByIndexData` class, which allows to call specific `get...(int)` methods on a returned `TupleValue`:
+The DataStax Java driver exposes a special [TupleValue] class to handle such columns. 
+[TupleValue] extends [GettableByIndexData] class, which allows to call specific `get...(int)` 
+methods on a returned [TupleValue]:
 
 ```java
 Row row = session.execute("SELECT v FROM ks.collect_things WHERE pk = 1").one();
@@ -30,7 +32,9 @@ Float thirdValueInTuple = tupleValue.getFloat(2);
 
 ### Using tuples as statement parameters
 
-A prepared statement may be containing a Tuple as a query parameter. In such case, users will need to create or gather a `TupleType` first, in order to be able to create a `TupleValue` to bind:
+A prepared statement may be containing a Tuple as a query parameter. In such case, users 
+will need to create or gather a [TupleType] first, in order to be able to create a [TupleValue] 
+to bind:
 
 ```java
 PreparedStatement ps = session.prepare("INSERT INTO ks.collect_things (pk, ck1, ck2, v) VALUES (:pk, :ck1, :ck2, :v)");
@@ -48,7 +52,9 @@ session.execute(bs);
 
 #### More use cases
 
-Users can also define single-usage tuples in _SELECT_ queries with the `IN` keyword, usually for tables with composite clustering keys, in that case a tuple will be usable the same way it was for prepared statements parameters:
+Users can also define single-usage tuples in _SELECT_ queries with the `IN` keyword, usually 
+for tables with composite clustering keys, in that case a tuple will be usable the same way 
+it was for prepared statements parameters:
 
 ```java
 TupleType oneTimeUsageTuple = cluster.getMetadata().newTupleType(DataType.text(), DataType.text());
@@ -61,7 +67,9 @@ bs.setTupleValue("t", oneTimeUsageTuple.newValue("1", "1"));
 session.execute(bs);
 ```
 
-More generally, the `IN` keyword in a `SELECT` query will be used to define a *list* of desired values of the filtered clustering keys, those would simply be bound as a list of `TupleValue` with the Java driver:
+More generally, the `IN` keyword in a `SELECT` query will be used to define a *list* of 
+desired values of the filtered clustering keys, those would simply be bound as a list of 
+[TupleValue] with the Java driver:
 
 ```java
 TupleType oneTimeUsageTuple = cluster.getMetadata().newTupleType(DataType.text(), DataType.text());
@@ -75,3 +83,5 @@ session.execute(bs);
 ```
 
 [TupleType]: http://docs.datastax.com/en/drivers/java/3.0/com/datastax/driver/core/TupleType.html
+[TupleValue]: http://docs.datastax.com/en/drivers/java/3.0/com/datastax/driver/core/TupleValue.html
+[GettableByIndexData]: http://docs.datastax.com/en/drivers/java/3.0/com/datastax/driver/core/GettableByIndexData.html
