@@ -66,11 +66,11 @@ public class LoggingRetryPolicy implements RetryPolicy {
 
     @VisibleForTesting
     static final String IGNORING_REQUEST_ERROR =
-            "Ignoring request error (initial consistency: {}, retries: {}, exception: {})";
+            "Ignoring request error (initial consistency: {}, retries: {})";
 
     @VisibleForTesting
     static final String RETRYING_ON_REQUEST_ERROR =
-            "Retrying on request error on {} at consistency {} (initial consistency: {}, retries: {}, exception: {})";
+            "Retrying on request error on {} at consistency {} (initial consistency: {}, retries: {})";
 
     private final RetryPolicy policy;
 
