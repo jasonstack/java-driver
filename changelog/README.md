@@ -3,6 +3,7 @@
 ### 3.3.0 (in progress)
 
 - [documentation] JAVA-1463: Revisit speculative execution docs.
+- [documentation] JAVA-1466: Revisit timestamp docs.
 
 
 ### 3.2.0
