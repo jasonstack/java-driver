@@ -119,6 +119,9 @@ Cluster.builder().addContactPoint("127.0.0.1")
     .build();
 ```
 
+Server-side generation might be more suitable for situations where it is more difficult to keep
+time synchronized across all clients.
+
 
 ### Summary
 
