@@ -2,6 +2,8 @@
 
 ### 3.3.0 (in progress)
 
+- [documentation] JAVA-1463: Revisit speculative execution docs.
+
 
 ### 3.2.0
 
