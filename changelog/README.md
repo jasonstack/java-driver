@@ -2,6 +2,8 @@
 
 ### 3.3.0 (in progress)
 
+- [improvement] JAVA-1460: Add speculative execution number to ExecutionInfo
+
 
 ### 3.2.0
 

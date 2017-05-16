@@ -15,7 +15,10 @@
  */
 package com.datastax.driver.core;
 
+import com.datastax.driver.core.policies.RetryPolicy;
+import com.datastax.driver.core.policies.SpeculativeExecutionPolicy;
 import com.datastax.driver.core.utils.Bytes;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -28,6 +31,7 @@ import java.util.Map;
  * Basic information on the execution of a query.
  */
 public class ExecutionInfo {
+    private final int speculativeExecution;
     private final List<Host> triedHosts;
     private final ConsistencyLevel achievedConsistency;
     private final QueryTrace trace;
@@ -39,7 +43,8 @@ public class ExecutionInfo {
     private final List<String> warnings;
     private final Map<String, ByteBuffer> incomingPayload;
 
-    private ExecutionInfo(List<Host> triedHosts, ConsistencyLevel achievedConsistency, QueryTrace trace, ByteBuffer pagingState, ProtocolVersion protocolVersion, CodecRegistry codecRegistry, Statement statement, boolean schemaAgreement, List<String> warnings, Map<String, ByteBuffer> incomingPayload) {
+    private ExecutionInfo(int speculativeExecution, List<Host> triedHosts, ConsistencyLevel achievedConsistency, QueryTrace trace, ByteBuffer pagingState, ProtocolVersion protocolVersion, CodecRegistry codecRegistry, Statement statement, boolean schemaAgreement, List<String> warnings, Map<String, ByteBuffer> incomingPayload) {
+        this.speculativeExecution = speculativeExecution;
         this.triedHosts = triedHosts;
         this.achievedConsistency = achievedConsistency;
         this.trace = trace;
@@ -52,16 +57,16 @@ public class ExecutionInfo {
         this.incomingPayload = incomingPayload;
     }
 
-    ExecutionInfo(List<Host> triedHosts) {
-        this(triedHosts, null, null, null, null, null, null, true, Collections.<String>emptyList(), null);
+    ExecutionInfo(Host singleHost) {
+        this(1, ImmutableList.of(singleHost), null, null, null, null, null, null, true, Collections.<String>emptyList(), null);
     }
 
-    ExecutionInfo withAchievedConsistency(ConsistencyLevel newConsistency) {
-        return new ExecutionInfo(triedHosts, newConsistency, trace, pagingState, protocolVersion, codecRegistry, statement, schemaInAgreement, warnings, incomingPayload);
+    public ExecutionInfo(int speculativeExecution, List<Host> triedHosts, ConsistencyLevel achievedConsistency, Map<String, ByteBuffer> customPayload) {
+        this(speculativeExecution, triedHosts, achievedConsistency, null, null, null, null, null, false, null, customPayload);
     }
 
     ExecutionInfo with(QueryTrace newTrace, List<String> newWarnings, ByteBuffer newPagingState, Statement newStatement, ProtocolVersion protocolVersion, CodecRegistry codecRegistry) {
-        return new ExecutionInfo(this.triedHosts, this.achievedConsistency,
+        return new ExecutionInfo(speculativeExecution, triedHosts, achievedConsistency,
                 newTrace,
                 newPagingState, protocolVersion, codecRegistry,
                 newStatement,
@@ -69,10 +74,6 @@ public class ExecutionInfo {
                 newWarnings,
                 incomingPayload
         );
-    }
-
-    ExecutionInfo withIncomingPayload(Map<String, ByteBuffer> incomingPayload) {
-        return new ExecutionInfo(triedHosts, achievedConsistency, trace, pagingState, protocolVersion, codecRegistry, statement, schemaInAgreement, warnings, incomingPayload);
     }
 
     /**
@@ -84,9 +85,9 @@ public class ExecutionInfo {
      * <li>if a host is tried by the driver but is dead or in
      * error, that host is recorded and the query is retried;</li>
      * <li>on a timeout or unavailable exception, some
-     * {@link com.datastax.driver.core.policies.RetryPolicy} may retry the
+     * {@link RetryPolicy} may retry the
      * query on the same host, so the same host might appear twice.</li>
-     * <li>if {@link com.datastax.driver.core.policies.SpeculativeExecutionPolicy speculative executions}
+     * <li>if {@link SpeculativeExecutionPolicy speculative executions}
      * are enabled, other hosts might have been tried speculatively as well.</li>
      * </ul>
      * <p/>
@@ -112,8 +113,24 @@ public class ExecutionInfo {
     }
 
     /**
+     * The speculative execution that completed this query.
+     * <p>
+     * 1 represents the initial, regular execution of the query, 2 represents the first speculative
+     * execution, etc.
+     * <p>
+     * Note that this is different from the number of <em>started</em> executions. For example, if
+     * one speculative execution was triggered, but the initial execution eventually completed
+     * first, this will be 1.
+     *
+     * @see Cluster.Builder#withSpeculativeExecutionPolicy(SpeculativeExecutionPolicy)
+     */
+    public int getSpeculativeExecution() {
+        return speculativeExecution;
+    }
+
+    /**
      * If the query returned without achieving the requested consistency level
-     * due to the {@link com.datastax.driver.core.policies.RetryPolicy}, this
+     * due to the {@link RetryPolicy}, this
      * return the biggest consistency level that has been actually achieved by
      * the query.
      * <p/>
