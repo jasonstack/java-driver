@@ -133,14 +133,7 @@ public class LoggingRetryPolicyIntegrationTest extends AbstractRetryPolicyIntegr
         retryDecision = ignore();
         query();
         String line = appender.waitAndGet(5000);
-        String[] lines = line.split(System.getProperty("line.separator"));
-        assertThat(lines.length).isGreaterThan(1);
-        String msg = lines[0];
-        String exception = lines[1];
-
-        Throwable expectedError = new ServerError(host1.getSocketAddress(), "Server Error");
-        assertThat(msg).isEqualTo(expectedMessage(IGNORING_REQUEST_ERROR, defaultCL, 0));
-        assertThat(exception).isEqualTo(expectedError.toString());
+        assertThat(line.trim()).isEqualTo(expectedMessage(IGNORING_REQUEST_ERROR, defaultCL, 0, new ServerError(host1.getSocketAddress(), "Server Error").toString()));
     }
 
     @Test(groups = "short")
@@ -149,14 +142,7 @@ public class LoggingRetryPolicyIntegrationTest extends AbstractRetryPolicyIntegr
         retryDecision = tryNextHost(LOCAL_ONE);
         query();
         String line = appender.waitAndGet(5000);
-        String[] lines = line.split(System.getProperty("line.separator"));
-        assertThat(lines.length).isGreaterThan(1);
-        String msg = lines[0];
-        String exception = lines[1];
-
-        Throwable expectedError = new ServerError(host1.getSocketAddress(), "Server Error");
-        assertThat(msg).isEqualTo(expectedMessage(RETRYING_ON_REQUEST_ERROR, "next host", LOCAL_ONE, defaultCL, 0));
-        assertThat(exception).isEqualTo(expectedError.toString());
+        assertThat(line.trim()).isEqualTo(expectedMessage(RETRYING_ON_REQUEST_ERROR, "next host", LOCAL_ONE, defaultCL, 0, new ServerError(host1.getSocketAddress(), "Server Error").toString()));
     }
 
     @Test(groups = "short")

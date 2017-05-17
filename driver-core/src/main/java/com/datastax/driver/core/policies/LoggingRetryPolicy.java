@@ -66,11 +66,11 @@ public class LoggingRetryPolicy implements RetryPolicy {
 
     @VisibleForTesting
     static final String IGNORING_REQUEST_ERROR =
-            "Ignoring request error (initial consistency: {}, retries: {})";
+            "Ignoring request error (initial consistency: {}, retries: {}, exception: {})";
 
     @VisibleForTesting
     static final String RETRYING_ON_REQUEST_ERROR =
-            "Retrying on request error on {} at consistency {} (initial consistency: {}, retries: {})";
+            "Retrying on request error on {} at consistency {} (initial consistency: {}, retries: {}, exception: {})";
 
     private final RetryPolicy policy;
 
@@ -139,10 +139,10 @@ public class LoggingRetryPolicy implements RetryPolicy {
         RetryDecision decision = policy.onRequestError(statement, cl, e, nbRetry);
         switch (decision.getType()) {
             case IGNORE:
-                logDecision(IGNORING_REQUEST_ERROR, cl, nbRetry, e);
+                logDecision(IGNORING_REQUEST_ERROR, cl, nbRetry, e.toString());
                 break;
             case RETRY:
-                logDecision(RETRYING_ON_REQUEST_ERROR, host(decision), cl(cl, decision), cl, nbRetry, e);
+                logDecision(RETRYING_ON_REQUEST_ERROR, host(decision), cl(cl, decision), cl, nbRetry, e.toString());
                 break;
         }
         return decision;
