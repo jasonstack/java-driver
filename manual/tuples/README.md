@@ -1,6 +1,6 @@
 ## Using Tuples with the Java driver
 
-Cassandra allows to use `tuple` data types [in tables](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/tupleType.html):
+Cassandra allows to use `tuple` data types [in tables and user-defined types](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/tupleType.html):
 
 ```
 CREATE TABLE ks.collect_things (
@@ -32,7 +32,7 @@ Float thirdValueInTuple = tupleValue.getFloat(2);
 
 ### Using tuples as statement parameters
 
-A prepared statement may be containing a Tuple as a query parameter. In such case, users 
+A prepared statement may contain a Tuple as a query parameter. In such cases, users 
 will need to create or gather a [TupleType] first, in order to be able to create a [TupleValue] 
 to bind:
 
@@ -52,9 +52,9 @@ session.execute(bs);
 
 #### More use cases
 
-Users can also define single-usage tuples in _SELECT_ queries with the `IN` keyword, usually 
-for tables with composite clustering keys, in that case a tuple will be usable the same way 
-it was for prepared statements parameters:
+Users can also define single-usage tuples in _SELECT_ queries with the `IN` keyword 
+(called a "multi-column IN restriction"), usually for tables with composite clustering 
+keys. In this case, a tuple will be usable the same way it was for prepared statements' parameters:
 
 ```java
 TupleType oneTimeUsageTuple = cluster.getMetadata().newTupleType(DataType.text(), DataType.text());
