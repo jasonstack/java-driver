@@ -2,6 +2,8 @@
 
 ### 3.3.0 (in progress)
 
+- [improvement] JAVA-1428: Upgrade logback and jackson dependencies.
+
 
 ### 3.2.0
 
