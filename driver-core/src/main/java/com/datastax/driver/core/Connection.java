@@ -846,6 +846,8 @@ class Connection {
                 throw (ClusterNameMismatchException) t;
             if (t instanceof DriverException)
                 throw (DriverException) t;
+            if (t instanceof Error)
+                throw (Error) t;
 
             return new RuntimeException("Unexpected exception during connection initialization", t);
         }

@@ -19,10 +19,12 @@ import org.apache.log4j.Level;
 import org.jboss.byteman.contrib.bmunit.BMNGListener;
 import org.jboss.byteman.contrib.bmunit.BMRule;
 import org.jboss.byteman.contrib.bmunit.BMUnitConfig;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
+import static com.datastax.driver.core.Cluster.builder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -32,20 +34,29 @@ import static org.assertj.core.api.Assertions.fail;
 @BMUnitConfig(loadDirectory = "target/test-classes")
 @Listeners(BMNGListener.class)
 @CCMConfig(createCluster = false)
-public class SessionErrorTest extends CCMTestsSupport {
+public class SessionErrorTest extends ScassandraTestBase {
 
-    private Cluster cluster1;
-    private Cluster cluster2;
+    private ScassandraCluster scassandra;
+    private Cluster cluster;
 
-    @BeforeMethod
+    @BeforeClass(groups = "short")
     public void setUp() throws Exception {
-        cluster1 = register(createClusterBuilder()
-                .addContactPointsWithPorts(ccm().addressOfNode(1)).build()).init();
-        cluster2 = register(createClusterBuilder()
-                .addContactPointsWithPorts(ccm().addressOfNode(1)).build()).init();
+        scassandra = ScassandraCluster.builder().withNodes(2).build();
+        scassandra.init();
+        cluster = builder()
+                .addContactPoints(scassandra.address(1).getAddress())
+                .withPort(scassandra.getBinaryPort())
+                .build();
+        cluster.init();
     }
 
-    @Test
+    @AfterClass(groups = "short")
+    public void tearDown() throws Exception {
+        cluster.close();
+        scassandra.stop();
+    }
+
+    @Test(groups = "short")
     @BMRule(name = "emulate OOME",
             targetClass = "com.datastax.driver.core.Connection$4",
             targetMethod = "apply(Void)",
@@ -53,14 +64,14 @@ public class SessionErrorTest extends CCMTestsSupport {
     )
     public void should_propagate_errors() {
         try {
-            cluster1.connect();
+            cluster.connect();
             fail("Expecting OOME");
         } catch (OutOfMemoryError e) {
             assertThat(e).hasMessage("not really");
         }
     }
 
-    @Test
+    @Test(groups = "short")
     @BMRule(name = "emulate NPE",
             targetClass = "com.datastax.driver.core.Connection$4",
             targetMethod = "apply(Void)",
@@ -69,21 +80,28 @@ public class SessionErrorTest extends CCMTestsSupport {
     public void should_not_propagate_unchecked_exceptions() {
         Level previous = TestUtils.setLogLevel(HostConnectionPool.class, Level.WARN);
         MemoryAppender logs = new MemoryAppender().enableFor(HostConnectionPool.class);
-        Session session;
         try {
-            session = cluster2.connect();
+            Session session = cluster.connect();
+            // Pool to host1 should be still open because host1 is the control host,
+            // but its pool should have no active connection
+            // Pool to host2 should have been closed because host2 has no
+            // more active connections
+            Session.State state = session.getState();
+            Host host1 = scassandra.host(cluster, 1, 1);
+            Host host2 = scassandra.host(cluster, 1, 2);
+            assertThat(state.getConnectedHosts()).hasSize(1).containsExactly(host1);
+            assertThat(state.getOpenConnections(host1)).isEqualTo(0); // pool open but empty
+            assertThat(state.getOpenConnections(host2)).isEqualTo(0); // pool closed
+            assertThat(logs.get())
+                    .contains(
+                            "Unexpected error during transport initialization",
+                            "not really",
+                            NullPointerException.class.getSimpleName(),
+                            "com.datastax.driver.core.Connection$4.apply");
         } finally {
             TestUtils.setLogLevel(HostConnectionPool.class, previous);
             logs.disableFor(HostConnectionPool.class);
         }
-        // The pool is still considered valid, although it has 0 active connections
-        assertThat(session.getState().getConnectedHosts()).hasSize(1);
-        assertThat(logs.get())
-                .contains(
-                        "Unexpected error during transport initialization",
-                        "not really",
-                        NullPointerException.class.getSimpleName(),
-                        "com.datastax.driver.core.Connection$4.apply");
     }
 
 }
