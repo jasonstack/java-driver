@@ -15,8 +15,8 @@ CREATE TABLE ks.collect_things (
 ### Fetching Tuples from Rows results
 
 The DataStax Java driver exposes a special [TupleValue] class to handle such columns. 
-[TupleValue] extends [GettableByIndexData] class, which allows to call specific `get...(int)` 
-methods on a returned [TupleValue]:
+[TupleValue] exposes getters allowing to extract from the tuple all the data types 
+supported by Cassandra:
 
 ```java
 Row row = session.execute("SELECT v FROM ks.collect_things WHERE pk = 1").one();
@@ -50,6 +50,14 @@ bs.setTupleValue("v", tupleType.newValue(1, "hello", 2.3f));
 session.execute(bs);
 ```
 
+The method [newValue(Object...)][newValueVararg] follows the same rules as `new SimpleStatement(String, Object...)`, 
+there can be ambiguities due to the fact that the driver will infer the data types from the values
+given in parameters of the method, whereas the data types required may differ (numeric 
+literals are always interpreted as `int`).
+
+To avoid such ambiguities, a [TupleValue] returned by [newValue()][newValue] also exposes specific 
+setters for all the existing Cassandra data types.
+
 #### More use cases
 
 Users can also define single-usage tuples in _SELECT_ queries with the `IN` keyword 
@@ -82,6 +90,8 @@ bs.setList("l", Arrays.asList(oneTimeUsageTuple.newValue("1", "1"), oneTimeUsage
 session.execute(bs);
 ```
 
-[TupleType]: http://docs.datastax.com/en/drivers/java/3.0/com/datastax/driver/core/TupleType.html
-[TupleValue]: http://docs.datastax.com/en/drivers/java/3.0/com/datastax/driver/core/TupleValue.html
-[GettableByIndexData]: http://docs.datastax.com/en/drivers/java/3.0/com/datastax/driver/core/GettableByIndexData.html
+[TupleType]: http://docs.datastax.com/en/drivers/java/3.2/com/datastax/driver/core/TupleType.html
+[TupleValue]: http://docs.datastax.com/en/drivers/java/3.2/com/datastax/driver/core/TupleValue.html
+[GettableByIndexData]: http://docs.datastax.com/en/drivers/java/3.2/com/datastax/driver/core/GettableByIndexData.html
+[newValueVararg]: http://docs.datastax.com/en/drivers/java/3.2/com/datastax/driver/core/TupleType.html#newValue-java.lang.Object...-
+[newValue]: http://docs.datastax.com/en/drivers/java/3.2/com/datastax/driver/core/TupleType.html#newValue--
