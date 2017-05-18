@@ -56,7 +56,13 @@ given in parameters of the method, whereas the data types required may differ (n
 literals are always interpreted as `int`).
 
 To avoid such ambiguities, a [TupleValue] returned by [newValue()][newValue] also exposes specific 
-setters for all the existing Cassandra data types.
+setters for all the existing Cassandra data types:
+
+```java
+TupleType tupleType = cluster.getMetadata().newTupleType(DataType.bigint(), DataType.text(), DataType.cfloat());
+
+TupleValue value = tupleType.newValue().setLong(0, 2).setString(1, "hello").setDouble(2, 2.3f);
+```
 
 #### More use cases
 
