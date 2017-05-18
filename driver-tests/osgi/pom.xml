@@ -35,7 +35,6 @@
         <!-- more recent version require JDK7+ -->
         <pax-exam.version>3.6.0</pax-exam.version>
         <url.version>2.4.0</url.version>
-        <slf4j.version>1.7.5</slf4j.version>
         <test.groups>none</test.groups>
         <!--
         Skip tests by default, short or long profile is required to run tests in this module
