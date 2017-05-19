@@ -15,7 +15,6 @@
  */
 package com.datastax.driver.core;
 
-import com.datastax.driver.core.policies.SpeculativeExecutionPolicy;
 import com.datastax.driver.core.utils.Bytes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -84,9 +83,9 @@ public class ExecutionInfo {
      * <li>if a host is tried by the driver but is dead or in
      * error, that host is recorded and the query is retried;</li>
      * <li>on a timeout or unavailable exception, some
-     * {@link RetryPolicy} may retry the
+     * {@link com.datastax.driver.core.policies.RetryPolicy} may retry the
      * query on the same host, so the same host might appear twice.</li>
-     * <li>if {@link SpeculativeExecutionPolicy speculative executions}
+     * <li>if {@link com.datastax.driver.core.policies.SpeculativeExecutionPolicy speculative executions}
      * are enabled, other hosts might have been tried speculatively as well.</li>
      * </ul>
      * <p/>
@@ -121,7 +120,7 @@ public class ExecutionInfo {
      * one speculative execution was triggered, but the initial execution eventually completed
      * first, this will be 1.
      *
-     * @see Cluster.Builder#withSpeculativeExecutionPolicy(SpeculativeExecutionPolicy)
+     * @see Cluster.Builder#withSpeculativeExecutionPolicy(com.datastax.driver.core.policies.SpeculativeExecutionPolicy)
      */
     public int getSpeculativeExecution() {
         return speculativeExecution;
@@ -129,7 +128,7 @@ public class ExecutionInfo {
 
     /**
      * If the query returned without achieving the requested consistency level
-     * due to the {@link RetryPolicy}, this
+     * due to the {@link com.datastax.driver.core.policies.RetryPolicy}, this
      * return the biggest consistency level that has been actually achieved by
      * the query.
      * <p/>
