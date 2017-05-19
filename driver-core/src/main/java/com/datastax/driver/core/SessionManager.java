@@ -376,7 +376,9 @@ class SessionManager extends AbstractSession {
                             cluster.manager.triggerOnDown(host, false);
                         } else {
                             logger.warn("Error creating pool to " + host, t);
-                            cluster.manager.triggerOnDown(host, true);
+                            // do not mark the host down, as there could be other connections to it
+                            // (e.g. the control connection, or another session pool).
+                            // The conviction policy will mark it down if it has no more active connections.
                         }
                         // propagate errors; for all other exceptions, consider the pool init failed
                         // but allow the session init process to continue normally
